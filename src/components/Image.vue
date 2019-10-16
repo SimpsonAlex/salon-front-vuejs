@@ -2,8 +2,18 @@
 
     <div>
         <b-form inline>
+          <b-form-group id="input-0" label="Client:" label-for="input-0">
+              <b-form-select
+              id="input-0"
+              v-model="client"
+              :options="optionsClientName"
+              >
+                  <template v-slot:first>
+                    <option value="" >-- not use filter client --</option>
+                  </template>
+              </b-form-select>
+          </b-form-group>
           <b-form-group id="input-1" label="Date:" label-for="input-1">
-
               <b-form-input type="date"
               id="input-1"
               v-model="startDate"
@@ -72,6 +82,8 @@ import axios from 'axios'
     export default {
         data() {
             return {
+                client:'',
+                optionsClientName: [],
                 startDate: (new Date()).toISOString().slice(0,10),
                 finishDate: (new Date()).toISOString().slice(0,10),
                 items: null,
@@ -81,59 +93,83 @@ import axios from 'axios'
             }
         },
         methods: {
-            onDelete(imageModal){
+            onDelete(imageModal) {
                 {
-               let itSure = confirm(imageModal.id)
-               if (itSure) {
-                    axios
-                    .delete((this.urlImageDelete + imageModal.id + '/'),
-                        {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
-                    .then(() => this.items.splice(this.items.indexOf(imageModal),1))
-                    .then(() => this.itemSplit = [])
-                    .then(() => this.splitItems())
-                    .then(() => this.$refs.modal.hide())
-            }else {
-               alert('Images is not deleted')
-              }
-            }
+                    let itSure = confirm(imageModal)
+                    console.log(this)
+                    if (itSure) {
+                        axios
+                            .delete((this.urlImageDelete + imageModal.id + '/'),
+                                {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                            .then(() => this.items.splice(this.items.indexOf(imageModal), 1))
+                            .then(() => this.itemSplit = [])
+                            .then(() => this.splitItems())
+                            .then(() => this.$refs.modal.hide())
+                    } else {
+                        alert('Images is not deleted')
+                    }
+                }
             },
-            splitItems(){
-                this.itemSplit = []
-                let scratch = []
-                let count = 0
-                let listImage = []
-                for(let visit of this.items){
-                    for(let image of visit.image){
+            splitItems() {
+                this.itemSplit = [];
+                let scratch = [];
+                let count = 0;
+                let listImage = [];
+                for (let visit of this.items) {
+                    for (let image of visit.image) {
                         listImage.push(image)
                     }
                 }
-                for (let item of listImage){
+                for (let item of listImage) {
                     count++
                     scratch.push(item);
-                    if(count === 7 || (listImage.indexOf(item)+1) === listImage.length  ){
+                    if (count === 7 || (listImage.indexOf(item) + 1) === listImage.length) {
                         this.itemSplit.push(scratch);
-                        scratch = []
+                        scratch = [];
                         count = 0
                     }
 
                 }
             },
-            onSubmit(){
+            onSubmit() {
                 axios
-                .get(`http://127.0.0.1:8000/visits/?client=${this.$route.params.id}&format=json&visit_after=${this.startDate}&visit_before=${this.finishDate}`,
-                {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                    .get(`http://127.0.0.1:8000/visits/?client=${this.client}&format=json&visit_after=${this.startDate}&visit_before=${this.finishDate}`,
+                        {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                    .then(response => {
+                        this.items = response.data;
+                        this.splitItems();
+                    })
+                    .catch(error => {
+                        console.log(error);
+                        this.errored = true;
+                    })
+                    .finally(() => (this.loading = false));
+
+            },
+            getClient() {
+                for (let item of this.items) {
+                    let clientData = {};
+                    clientData.text = item.first_name + ' ' + item.last_name;
+                    clientData.value = item.id;
+                    this.optionsClientName.push(clientData)
+
+                }
+            }
+        },
+        mounted() {
+            axios
+                .get('http://127.0.0.1:8000/listclients/?format=json')
                 .then(response => {
-                    this.items = response.data; this.splitItems();
+                    this.items = response.data;
                 })
+                .then(() => this.getClient())
                 .catch(error => {
                     console.log(error);
                     this.errored = true;
                 })
                 .finally(() => (this.loading = false));
-
             }
-        },
-    }
+        }
 </script>
 
 <style scoped>

@@ -12,19 +12,20 @@ Vue.config.productionTip = false
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import ClientDetail from "@/components/ClientDetail";
-import Active from "@/components/Create";
-import Foo from "@/components/Foo";
-import Bar from "@/components/Bar";
+import Image from "@/components/Image";
+import Calendar from "@/components/Calendar";
+import Client_list from "@/components/Client_list";
 
 
 var router = new VueRouter({
   routes:[
-    {path: '/create', component: Active},
-    {path: '/foo', component: Foo},
-    {path: '/clients_list', component: Bar },
+    {path: '/image', component: Image},
+    {path: '/calendar', component: Calendar},
+    {path: '/clients_list', component: Client_list },
     {path: '/client/:id', component:ClientDetail},
-
-  ]
+    {path: '*', redirect: '/image'},
+  ],
+  mode: 'history'
 })
 
 new Vue({

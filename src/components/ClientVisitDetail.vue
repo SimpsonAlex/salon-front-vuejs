@@ -9,7 +9,7 @@
       </template>
 
       <template v-slot:cell(image)="row">
-          <b-button size="sm" @click="showImage(row.toggleDetails)" class="mr-2">
+          <b-button size="sm" @click="showImage(row.toggleDetails, row.item.date_visit)" class="mr-2">
               Image
           </b-button>
       </template>
@@ -19,11 +19,11 @@
           </b-button>
       </template>
       <template v-slot:row-details="row">
-          <div v-if="showImages" class="p-4 bg-dark">-->
+          <div v-if="showImages" class="p-4 bg-dark">
                   <b-row>
                     <b-col v-for="photo in row.item.image" :key="photo.id">
-                           <b-img-lazy v-if="photo.main_image" center :src='photo.main_image' @click.native="imageDeleteList.push(photo)" height="200px" width="300px"></b-img-lazy>
-                           <b-img v-else src="photo.main_image" @click="imageDeleteList.push(photo.id)" height="200px" width="300px"></b-img>
+                           <b-img-lazy v-if="photo.main_image" v-b-modal.mod :src='photo.main_image' @click.native='modalParrametres(photo.main_image, row.item.image, photo, photo.id)' height="200px" width="300px"></b-img-lazy>
+                           <b-img v-else :src="photo.main_image" v-b-modal='' @click.native='modalParrametres(photo.main_image, row.item.image, photo, photo.id)'  height="200px" width="300px"></b-img>
                     </b-col>
                   </b-row>
                   <b-button @click="row.toggleDetails" variant="primary">HIDE</b-button>
@@ -37,7 +37,6 @@
               </b-dropdown-form>
               <b-dropdown-divider></b-dropdown-divider>
             </b-dropdown>
-               <b-button pill size="lg" @click="imagesDelete(imageDeleteList, row.item.image)" variant="danger">DELETE</b-button>
           </div>
           </div>
           <div v-else-if="showChangeVisit && row.item.id === itemsVisitDetail.id">
@@ -69,10 +68,8 @@
                   </b-form-group>
                   <b-button pill @click="onSubmit(form.id, row)" variant="success">Submit</b-button>
                   <b-button pill @click="onReset" variant="warning">Reset</b-button>
-                  <b-button @click="onDelete(form.id)" variant="danger">DELETE</b-button>
+                  <b-button @click="onDelete(form.id, row)" variant="danger">DELETE</b-button>
                   <b-button @click="row.toggleDetails" variant="primary">HIDE</b-button>
-                    <p>{{form}}</p>
-
                 </b-form>
               </b-card>
           </div>
@@ -81,6 +78,12 @@
 
       </template>
     </b-table>
+       <div>
+          <b-modal id='mod' size="xl" ref="modal" centered >
+            <b-img :src='imageDeleteForm.src' width="1000px" height="1000px"></b-img>
+            <b-button @click="imageDelete(imageDeleteForm)" variant="danger">DELETE</b-button>
+          </b-modal>
+       </div>
   </div>
 </template>
 
@@ -93,7 +96,6 @@ export default {
         items: null,
         itemsVisitDetail: {},
         imagePutId: null,
-        imageDeleteList: [],
         url: ('http://127.0.0.1:8000/clients/' + this.$route.params.id + '/?format=json'),
         urlDetailVisit: 'http://127.0.0.1:8000/visit_detail/',
         urlImagePost: "http://127.0.0.1:8000/images/",
@@ -115,6 +117,12 @@ export default {
             {key: 'image', label: 'IMAGE'},
             'details'
         ],
+        imageDeleteForm: {
+            src: '',
+            row: '',
+            id_refresh: '',
+            id_delete: '',
+        },
         form: {
             id: "",
             date_visit: "",
@@ -128,7 +136,7 @@ export default {
         addImageForm:{
             "main_image": [],
             "visit": null,
-            "item": 1,
+            "item": null,
         },
         showImages: false,
         showChangeVisit: false,
@@ -152,22 +160,29 @@ export default {
            func()
            this.showChangeVisit = false
        },
+       modalParrametres(src, row, photo, id){
+
+           this.imageDeleteForm.src = src;
+           this.imageDeleteForm.row = row;
+           this.imageDeleteForm.id_refresh = photo;
+           this.imageDeleteForm.id_delete = id;
+       },
        changeVisit(func, id){
             this.showDetails(id).then(() => {this.form = this.itemsVisitDetail}).then(() =>  func())
             this.showImages = false
             this.showChangeVisit = true
-
-
         },
        onReset(){
            this.form = this.itemsVisitDetail
         },
-       onDelete(id){
-           let itSure = confirm('Are you sure you want to delete this Visit Detail Instance?')
+       onDelete(id, row){
+           let itSure = confirm('Are you sure want to delete this Visit Detail Instance?');
            if (itSure) {
                axios
                    .delete((this.urlDetailVisit + id + '/'),
                        {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                   .then(() => row.toggleDetails())
+                   .then(() => this.items.splice(row.index, 1))
                    .then(() => this.onUpdate())
                } else {
                alert('Visit is not deleted')
@@ -181,7 +196,6 @@ export default {
                         {"Content-Type": 'application/json', 'Accept': 'application/json'}
             }).then(response => this.applyChange(response.data, row)).
             catch(function(error) {alert('FAILURE!!')}).
-            then(() => console.log(row.item)).
             then(() => this.onUpdate()).
             then(() => row.toggleDetails())
         },
@@ -231,20 +245,18 @@ export default {
                 }).then(() => alert('your changes are accepted!'))
             }
         },
-       imagesDelete(imageDeleteList, row_item_image){
-           let itSure = confirm(imageDeleteList)
+       imageDelete(imageDeleteForm){
+           let itSure = confirm('delete this photo?');
            if (itSure) {
-                for (let item of imageDeleteList) {
-                    axios
-                    .delete((this.urlImageDelete + item + '/'),
-                        {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
-                    .then(() => row_item_image.splice(row_item_image.indexOf(item),1))
-                    .then(() => this.onUpdate())
-                }
+            axios
+            .delete((this.urlImageDelete + imageDeleteForm.id_delete + '/'),
+                {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+            .then(() => imageDeleteForm.row.splice(imageDeleteForm.row.indexOf(imageDeleteForm.id_refresh),1))
+            .then(() => this.onUpdate()).then(() => this.$refs.modal.hide())
+
             }else {
                alert('Images is not deleted')
               }
-            this.imageDeleteList = []
             }
         },
        mounted() {
