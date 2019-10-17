@@ -1,1 +1,1 @@
-web: serve -s dist
+web: node serve -s dist
