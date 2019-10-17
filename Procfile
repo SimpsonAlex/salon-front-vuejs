@@ -1,1 +1,1 @@
-web: node node_modules/npm-run-path/index.js $PORT
+web: node index.js
