@@ -1,1 +1,1 @@
-web: serve -s dis
+web: serve -s dist
