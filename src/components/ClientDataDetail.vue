@@ -55,6 +55,7 @@
 
 <script>
 import axios from 'axios'
+import BACKEND_PATH from './const'
 
 export default {
   data() {
@@ -62,8 +63,8 @@ export default {
 
         items: [],
         it: {},
-        url: ('http://127.0.0.1:8000/listclients/'+ this.$route.params.id + '/?format=json'),
-        urlPhotoPut: ('http://127.0.0.1:8000/photo/' + this.$route.params.id + '/'),
+        url: (BACKEND_PATH + 'listclients/'+ this.$route.params.id + '/?format=json'),
+        urlPhotoPut: (BACKEND_PATH + 'photo/' + this.$route.params.id + '/'),
         fields:[
             {key: 'first_name', label:"FIRST NAME"},
             {key: 'last_name', label: "LAST NAME"},

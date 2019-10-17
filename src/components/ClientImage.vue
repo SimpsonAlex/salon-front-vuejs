@@ -68,6 +68,7 @@
 
 <script>
 import axios from 'axios'
+import BACKEND_PATH from './const'
 
     export default {
         data() {
@@ -77,7 +78,7 @@ import axios from 'axios'
                 items: null,
                 itemSplit: [],
                 imageModal: '',
-                urlImageDelete: 'http://127.0.0.1:8000/image_create/',
+                urlImageDelete: BACKEND_PATH + 'image_create/',
             }
         },
         methods: {
@@ -120,7 +121,7 @@ import axios from 'axios'
             },
             onSubmit(){
                 axios
-                .get(`http://127.0.0.1:8000/visits/?client=${this.$route.params.id}&format=json&visit_after=${this.startDate}&visit_before=${this.finishDate}`,
+                .get(BACKEND_PATH + `visits/?client=${this.$route.params.id}&format=json&visit_after=${this.startDate}&visit_before=${this.finishDate}`,
                 {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
                 .then(response => {
                     this.items = response.data; this.splitItems();

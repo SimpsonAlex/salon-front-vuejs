@@ -50,6 +50,8 @@
 
 <script>
 import axios from 'axios'
+import BACKEND_PATH from './const'
+
 export default {
     data() {
         return {
@@ -91,7 +93,7 @@ export default {
                 {key: 'summary', label: 'title'},
                 {key: 'attendees', label: 'client'}
             ],
-            urlCalendar: 'http://127.0.0.1:8000/calendar/',
+            urlCalendar: BACKEND_PATH + 'calendar/',
         };
     },
     methods: {

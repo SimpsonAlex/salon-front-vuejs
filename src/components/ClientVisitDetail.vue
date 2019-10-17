@@ -89,6 +89,7 @@
 
 <script>
 import axios from 'axios'
+import BACKEND_PATH from './const'
 
 export default {
   data() {
@@ -96,11 +97,11 @@ export default {
         items: null,
         itemsVisitDetail: {},
         imagePutId: null,
-        url: ('http://127.0.0.1:8000/clients/' + this.$route.params.id + '/?format=json'),
-        urlDetailVisit: 'http://127.0.0.1:8000/visit_detail/',
-        urlImagePost: "http://127.0.0.1:8000/images/",
-        urlImagePut: 'http://127.0.0.1:8000/image_create/',
-        urlImageDelete: 'http://127.0.0.1:8000/image_create/',
+        url: (BACKEND_PATH +'clients/' + this.$route.params.id + '/?format=json'),
+        urlDetailVisit: BACKEND_PATH +'visit_detail/',
+        urlImagePost: BACKEND_PATH + "images/",
+        urlImagePut: BACKEND_PATH + 'image_create/',
+        urlImageDelete: BACKEND_PATH + 'image_create/',
         fields:[
             'index',
             {key:'client', label:'CLIENT'},

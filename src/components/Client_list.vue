@@ -200,6 +200,7 @@
 
 <script>
 import axios from 'axios'
+import BACKEND_PATH from './const'
 
 export default {
   data() {
@@ -256,12 +257,12 @@ export default {
         cor_no_manic: false,
         pay: "",
       },
-      urlCreateClient: ('http://127.0.0.1:8000/create-client/'),
-      urlDeleteClient: ('http://127.0.0.1:8000/clients/'),
-      urlPhotoPut: ('http://127.0.0.1:8000/photo/'),
-      urlCreateVisit: 'http://127.0.0.1:8000/visit_detail/',
-      urlImagePost: "http://127.0.0.1:8000/images/",
-      urlImagePut: 'http://127.0.0.1:8000/image_create/',
+      urlCreateClient: BACKEND_PATH + 'create-client/',
+      urlDeleteClient: BACKEND_PATH + 'clients/',
+      urlPhotoPut: BACKEND_PATH + 'photo/',
+      urlCreateVisit: BACKEND_PATH + 'visit_detail/',
+      urlImagePost: BACKEND_PATH + "images/",
+      urlImagePut: BACKEND_PATH + 'image_create/',
     }
   },
   computed: {
@@ -276,7 +277,7 @@ export default {
   },
   mounted() {
   axios
-    .get('http://127.0.0.1:8000/listclients/?format=json')
+    .get(BACKEND_PATH + 'listclients/?format=json')
     .then(response => {this.items = response.data;
     })
     .then(() => this.totalRows = this.items.length)
