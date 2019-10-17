@@ -24,8 +24,7 @@ var router = new VueRouter({
     {path: '/clients_list', component: Client_list },
     {path: '/client/:id', component:ClientDetail},
     {path: '*', redirect: '/image'},
-  ],
-  mode: 'history'
+  ]
 })
 
 new Vue({
