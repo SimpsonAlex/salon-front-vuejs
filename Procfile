@@ -1,1 +1,1 @@
-web: node front.js $PORT
+web: node node_modules/npm-run-path/index.js $PORT
