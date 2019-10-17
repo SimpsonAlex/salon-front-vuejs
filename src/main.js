@@ -23,7 +23,6 @@ var router = new VueRouter({
     {path: '/calendar', component: Calendar},
     {path: '/clients_list', component: Client_list },
     {path: '/client/:id', component:ClientDetail},
-    {path: '*', redirect: '/image'},
   ],
   mode: 'history'
 })
