@@ -17,12 +17,14 @@ import Calendar from "@/components/Calendar";
 import Client_list from "@/components/Client_list";
 
 
+
 var router = new VueRouter({
   routes:[
     {path: '/image', component: Image},
     {path: '/calendar', component: Calendar},
     {path: '/clients_list', component: Client_list },
     {path: '/client/:id', component:ClientDetail},
+    {path: '*', redirect: '/clients_list'}
   ],
   mode: 'history'
 })
