@@ -23,20 +23,15 @@
                   <b-row>
                     <b-col v-for="photo in row.item.image" :key="photo.id">
                            <b-img-lazy v-if="photo.main_image" v-b-modal.mod :src='photo.main_image' @click.native='modalParrametres(photo.main_image, row.item.image, photo, photo.id)' height="200px" width="300px"></b-img-lazy>
-                           <b-img v-else :src="photo.main_image" v-b-modal='' @click.native='modalParrametres(photo.main_image, row.item.image, photo, photo.id)'  height="200px" width="300px"></b-img>
+                           <b-img v-else :src="photo.main_image" v-b-modal.mod @click='modalParrametres(photo, row.item.image, photo, photo.id)'  height="200px" width="300px"></b-img>
                     </b-col>
                   </b-row>
                   <b-button @click="row.toggleDetails" variant="primary">HIDE</b-button>
           <div>
-            <b-dropdown id="dropdown-form" text="Add new image" ref="dropdown">
-              <b-dropdown-form>
-                <b-form-group size="lg">
-                  <b-form-file size="lg" v-model="addImageForm.main_image" plain></b-form-file>
-                </b-form-group>
-               <b-button pill size="lg" @click="addImage(row.item.id, row.item.image)" variant="primary">submit</b-button>
-              </b-dropdown-form>
-              <b-dropdown-divider></b-dropdown-divider>
-            </b-dropdown>
+                <b-form inline>
+                  <b-form-file  v-model="addImageForm.main_image"></b-form-file>
+                  <b-button pill  @click="addImage(row.item.id, row.item.image)" variant="primary">Add file</b-button>
+                </b-form>
           </div>
           </div>
           <div v-else-if="showChangeVisit && row.item.id === itemsVisitDetail.id">
@@ -97,7 +92,9 @@ export default {
         items: null,
         itemsVisitDetail: {},
         imagePutId: null,
-        url: (BACKEND_PATH +'clients/' + this.$route.params.id + '/?format=json'),
+        headerSimple: this.$store.state.headerSimple,
+        headerFile: this.$store.state.headerFile,
+        url: (`${BACKEND_PATH}clients/${this.$route.params.id}/?format=json`),
         urlDetailVisit: BACKEND_PATH +'visit_detail/',
         urlImagePost: BACKEND_PATH + "images/",
         urlImagePut: BACKEND_PATH + 'image_create/',
@@ -137,7 +134,7 @@ export default {
         addImageForm:{
             "main_image": [],
             "visit": null,
-            "item": null,
+            "item": this.$route.params.id,
         },
         showImages: false,
         showChangeVisit: false,
@@ -147,7 +144,7 @@ export default {
     methods: {
        showDetails(id){
            return axios
-            .get(this.urlDetailVisit + id + '/')
+            .get(this.urlDetailVisit + id + '/', this.headerSimple)
             .then(response => {this.itemsVisitDetail = response.data;
             }).catch(error => {
               console.log(error);
@@ -180,8 +177,7 @@ export default {
            let itSure = confirm('Are you sure want to delete this Visit Detail Instance?');
            if (itSure) {
                axios
-                   .delete((this.urlDetailVisit + id + '/'),
-                       {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                   .delete((this.urlDetailVisit + id + '/', this.headerSimple))
                    .then(() => row.toggleDetails())
                    .then(() => this.items.splice(row.index, 1))
                    .then(() => this.onUpdate())
@@ -191,14 +187,11 @@ export default {
        },
        onSubmit(id, row) {
             axios
-            .put((this.urlDetailVisit + id + '/'),
-                this.form,{
-                    headers:
-                        {"Content-Type": 'application/json', 'Accept': 'application/json'}
-            }).then(response => this.applyChange(response.data, row)).
-            catch(function(error) {alert('FAILURE!!')}).
-            then(() => this.onUpdate()).
-            then(() => row.toggleDetails())
+            .put((this.urlDetailVisit + id + '/'), this.form, this.headerSimple)
+            .then(response => this.applyChange(response.data, row))
+            .catch(function(error) {alert('FAILURE!!')})
+            .then(() => this.onUpdate())
+            .then(() => row.toggleDetails())
         },
        onUpdate() {
             this.$refs.table.refresh();
@@ -217,16 +210,13 @@ export default {
                 return alert ('image is not selected')
             }else {
                 this.addImageForm.visit = idVisit
-                this.$refs.dropdown.hide(true)
                 let formData = new FormData();
                 formData.append('main_image', this.addImageForm.main_image)
                 axios.post(
                     this.urlImagePost,
                     this.addImageForm,
-                    {
-                        headers:
-                            {"Content-Type": 'application/json', 'Accept': 'application/json'}
-                    })
+                    this.headerSimple
+                    )
                     .then(response => {
                         this.imagePutId = [response.data.id]
                     })
@@ -235,23 +225,25 @@ export default {
                             axios.put(
                                 (this.urlImagePut + this.imagePutId + '/'),
                                 formData,
-                                {headers: {"Content-Type": 'multipart/form-data', 'Accept': 'application/json'}}
-                            )
-                                .then(response => {
-                                    row_item_image.push(response.data)
-                                }).then(() => this.onUpdate())
+                                this.headerFile
+                                )
+                                .then(response => {row_item_image.push(response.data)})
+                                .then(() => this.onUpdate())
+                                .catch(function (error) {alert('FAILURE!!')})
                         }
-                    }).catch(function (error) {
-                    alert('FAILURE!!')
-                }).then(() => alert('your changes are accepted!'))
+                    })
+                    .then(() => alert('your changes are accepted!'))
+                    .catch(function (error) {alert('FAILURE!!')})
+                    .then(() => this.$refs.dropdown.hide(true))
             }
+
         },
        imageDelete(imageDeleteForm){
            let itSure = confirm('delete this photo?');
            if (itSure) {
             axios
             .delete((this.urlImageDelete + imageDeleteForm.id_delete + '/'),
-                {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                this.headerSimple)
             .then(() => imageDeleteForm.row.splice(imageDeleteForm.row.indexOf(imageDeleteForm.id_refresh),1))
             .then(() => this.onUpdate()).then(() => this.$refs.modal.hide())
 
@@ -262,7 +254,7 @@ export default {
         },
        mounted() {
          axios
-         .get(this.url)
+         .get(this.url, this.headerSimple)
          .then(response => {this.items = response.data.visit;})
          .catch(error => {
             console.log(error);

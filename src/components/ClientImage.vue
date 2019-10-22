@@ -79,6 +79,8 @@ import BACKEND_PATH from './const'
                 itemSplit: [],
                 imageModal: '',
                 urlImageDelete: BACKEND_PATH + 'image_create/',
+                headerSimple: this.$store.state.headerSimple,
+                headerFile: this.$store.state.headerFile,
             }
         },
         methods: {
@@ -87,11 +89,9 @@ import BACKEND_PATH from './const'
                let itSure = confirm(imageModal.id)
                if (itSure) {
                     axios
-                    .delete((this.urlImageDelete + imageModal.id + '/'),
-                        {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                    .delete((this.urlImageDelete + imageModal.id + '/'), this.headerSimple)
                     .then(() => this.items.splice(this.items.indexOf(imageModal),1))
-                    .then(() => this.itemSplit = [])
-                    .then(() => this.splitItems())
+                    .then(() => this.onSubmit())
                     .then(() => this.$refs.modal.hide())
             }else {
                alert('Images is not deleted')
@@ -122,7 +122,7 @@ import BACKEND_PATH from './const'
             onSubmit(){
                 axios
                 .get(BACKEND_PATH + `visits/?client=${this.$route.params.id}&format=json&visit_after=${this.startDate}&visit_before=${this.finishDate}`,
-                {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                this.headerSimple)
                 .then(response => {
                     this.items = response.data; this.splitItems();
                 })

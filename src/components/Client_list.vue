@@ -87,7 +87,7 @@
         <img :src=row.item.foto width="100px" height="150px">
       </template>
       <template v-slot:cell(url)="row">
-        <b-button pill variant="outline-primary" :href="'/client/' + row.item.id">Detail</b-button>
+        <b-button pill variant="outline-primary" :to="'/client/' + row.item.id">Detail</b-button>
       </template>
       <template v-slot:cell(delete)="row">
         <b-button pill @click="deleteClient(row)" variant="danger" >delete</b-button>
@@ -110,7 +110,7 @@
     </div>
     <div>
           <b-modal id='client' size="xl" ref="modal" centered >
-                      <b-form-group id="input-1" label="FIRST NAME:" label-for="input-2">
+                      <b-form-group id="input-1" label="FIRST NAME:" label-for="input-1">
                         <b-form-input
                         id="input 1"
                         v-model="form.first_name"
@@ -123,14 +123,13 @@
                           v-model="form.last_name"
                         ></b-form-input>
                       </b-form-group>
-
                       <b-form-group id="input-group-3" label="TELEPHONE:" label-for="input-3">
                         <b-form-input
                             id="input-3"
                             v-model="form.telepfon"
                         ></b-form-input>
                       </b-form-group>
-                      <b-form-group id="input-group-4" label="PHOTO:" label-for="input-4" >
+                      <b-form-group id="input-group-4" label="PHOTO:"  >
                         <b-form-file
                             id="input-4"
                             v-model="form.foto"
@@ -241,7 +240,7 @@ export default {
           last_name: '',
           telepfon: '',
           active: '',
-          foto: '',
+          foto: null,
         },
       formImage: {
         "visit": null,
@@ -257,6 +256,8 @@ export default {
         cor_no_manic: false,
         pay: "",
       },
+      headers: {headers:{"Authorization": 'Token ' + this.$store.state.token.key, "Content-Type": 'application/json', 'Accept': 'application/json'}},
+      headersFile: {headers:{"Authorization": 'Token ' + this.$store.state.token.key, "Content-Type": 'application/json', 'Accept': 'application/json'}},
       urlCreateClient: BACKEND_PATH + 'create-client/',
       urlDeleteClient: BACKEND_PATH + 'clients/',
       urlPhotoPut: BACKEND_PATH + 'photo/',
@@ -277,7 +278,7 @@ export default {
   },
   mounted() {
   axios
-    .get(BACKEND_PATH + 'listclients/?format=json')
+    .get(BACKEND_PATH + 'listclients/?format=json', this.headers)
     .then(response => {this.items = response.data;
     })
     .then(() => this.totalRows = this.items.length)
@@ -292,26 +293,15 @@ export default {
   addImageVisit(){
         if (this.formImageList){
             for (let image of this.formImageList){
-                console.log(image)
                 let imagePutId = null
                 let formData = new FormData();
                 formData.append('main_image', image);
-                axios.post(
-                    this.urlImagePost,
-                    this.formImage,
-                      {
-                         headers:
-                         {"Content-Type": 'application/json', 'Accept': 'application/json'}
-                      })
+                axios.post(this.urlImagePost, this.formImage, this.headers)
                     .then(response => {
                             imagePutId = [response.data.id]
                         })
                     .then(() => {
-                        axios.put(
-                            (this.urlImagePut + imagePutId + '/'),
-                            formData,
-                            {headers: {"Content-Type": 'multipart/form-data', 'Accept': 'application/json'}}
-                            )
+                        axios.put((this.urlImagePut + imagePutId + '/'), formData, this.headersFile)
                         })
                     .catch(function (error) {
                             alert('FAILURE!!')
@@ -321,11 +311,7 @@ export default {
     },
   saveVisit(){
         axios
-            .post(this.urlCreateVisit,
-                this.formVisit,{
-                    headers:
-                        {"Content-Type": 'application/json', 'Accept': 'application/json'}
-            })
+            .post(this.urlCreateVisit, this.formVisit, this.headers)
             .then(response => {this.formImage.visit = response.data.id; this.formImage.item = response.data.client})
             .then(() => this.addImageVisit())
             .then(() => this.$refs.modal_visit.hide())
@@ -355,7 +341,7 @@ export default {
           last_name: '',
           telepfon: '',
           active: '',
-          foto: '',
+          foto: null,
         };
 
     },
@@ -372,9 +358,7 @@ export default {
   deleteClient(row){
         axios
             .delete(
-                this.urlDeleteClient + row.item.id + '/',
-                {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}}
-            )
+                this.urlDeleteClient + row.item.id + '/', this.headers)
             .then(() => this.items.splice(row.index, 1))
             .then(() => this.onUpdate())
 
@@ -385,17 +369,14 @@ export default {
         axios.post(
             this.urlCreateClient,
             this.form,
-            {
-                headers:
-                    {"Content-Type": 'application/json', 'Accept': 'application/json'}
-            })
+            this.headers)
             .then(response => {this.newClient = response.data})
             .then(() => {
             if (formData.get('foto')){
                 axios.put(
                     (this.urlPhotoPut + this.newClient.id + '/'),
                     formData,
-                    {headers: {"Content-Type": 'multipart/form-data', 'Accept': 'application/json'}}
+                    this.headersFile
                     ).then(response => {this.newClient.foto = response.data.foto})
             }})
             .then(() => this.items.push(this.newClient))

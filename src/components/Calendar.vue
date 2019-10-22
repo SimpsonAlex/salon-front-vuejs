@@ -93,6 +93,8 @@ export default {
                 {key: 'summary', label: 'title'},
                 {key: 'attendees', label: 'client'}
             ],
+            headerSimple: this.$store.state.headerSimple,
+            headerFile: this.$store.state.headerFile,
             urlCalendar: BACKEND_PATH + 'calendar/',
         };
     },
@@ -119,10 +121,7 @@ export default {
         createEvent(){
             this.formEvent.start = this.startDay + 'T' + this.startTime + ':00'
             axios
-                .post(this.urlCalendar, this.formEvent, {
-                    headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}
-                    })
-
+                .post(this.urlCalendar, this.formEvent, this.headerSimple)
         },
         bindGoogleCalendar(value){
             let time_event = ""
@@ -178,7 +177,7 @@ export default {
 
     },
     mounted() {
-    axios.get(this.urlCalendar)
+    axios.get(this.urlCalendar, this.headerSimple)
       .then(response => (this.items = response.data))
       .then(() => this.getItemsCalendar());
   }

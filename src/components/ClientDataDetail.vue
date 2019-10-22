@@ -63,6 +63,8 @@ export default {
 
         items: [],
         it: {},
+        headerSimple: this.$store.state.headerSimple,
+        headerFile: this.$store.state.headerFile,
         url: (BACKEND_PATH + 'listclients/'+ this.$route.params.id + '/?format=json'),
         urlPhotoPut: (BACKEND_PATH + 'photo/' + this.$route.params.id + '/'),
         fields:[
@@ -88,26 +90,21 @@ export default {
       onSubmit(){
         let formData = new FormData();
         formData.append('foto', this.form.foto)
-          console.log(formData, this.form)
         axios.put(
             this.url,
             this.form,
-            {
-                headers:
-                    {"Content-Type": 'application/json', 'Accept': 'application/json'}
-            }).then(response => {this.items = [response.data]}).
-        then(() => {
-            if (formData.get('foto')){
-                axios.put(
-                    this.urlPhotoPut,
-                    formData,
-                    {headers: {"Content-Type": 'multipart/form-data', 'Accept': 'application/json'}}
-                    ).then(response => {this.items[0].foto = response.data.foto})
-            }}).
-        catch(function(error) {alert('FAILURE!!')}).
-        then(() => alert('your changes are accepted!')).
-        then(() => this.hideChangerOptions()).
-        then(() => this.onUpdate())
+            this.headerSimple)
+            .then(response => {this.items = [response.data]})
+            .then(() => {
+                if (formData.get('foto')){
+                    axios
+                        .put(this.urlPhotoPut, formData,this.headerFile)
+                        .then(response => {this.items[0].foto = response.data.foto})
+            }})
+            .then(() => alert('your changes are accepted!'))
+            .then(() => this.hideChangerOptions())
+            .then(() => this.onUpdate())
+            .catch(function(error) {alert('FAILURE!!')})
       },
       onReset(evt) {
         evt.preventDefault()
@@ -141,9 +138,9 @@ export default {
     },
   mounted() {
      axios
-    .get(this.url)
-    .then(response => {this.it = response.data
-    }).then(() => this.fillingOutFormsWithClientData(this.it)).then(() => {this.items = [this.it]})
+    .get(this.url, this.headerFile)
+    .then(response => {this.it = response.data})
+    .then(() => this.fillingOutFormsWithClientData(this.it)).then(() => {this.items = [this.it]})
     .catch(error => {
       console.log(error);
       this.errored = true;

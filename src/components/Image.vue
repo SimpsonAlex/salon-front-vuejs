@@ -89,6 +89,8 @@ import axios from 'axios'
                 items: null,
                 itemSplit: [],
                 imageModal: '',
+                headerSimple: this.$store.state.headerSimple,
+                headerFile: this.$store.state.headerFile,
                 urlImageDelete: 'http://127.0.0.1:8000/image_create/',
             }
         },
@@ -96,11 +98,9 @@ import axios from 'axios'
             onDelete(imageModal) {
                 {
                     let itSure = confirm(imageModal)
-                    console.log(this)
                     if (itSure) {
                         axios
-                            .delete((this.urlImageDelete + imageModal.id + '/'),
-                                {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                            .delete((this.urlImageDelete + imageModal.id + '/'), this.headersFile)
                             .then(() => this.items.splice(this.items.indexOf(imageModal), 1))
                             .then(() => this.itemSplit = [])
                             .then(() => this.splitItems())
@@ -134,7 +134,7 @@ import axios from 'axios'
             onSubmit() {
                 axios
                     .get(`http://127.0.0.1:8000/visits/?client=${this.client}&format=json&visit_after=${this.startDate}&visit_before=${this.finishDate}`,
-                        {headers: {"Content-Type": 'application/json', 'Accept': 'application/json'}})
+                        this.headerSimple)
                     .then(response => {
                         this.items = response.data;
                         this.splitItems();
@@ -158,7 +158,7 @@ import axios from 'axios'
         },
         mounted() {
             axios
-                .get('http://127.0.0.1:8000/listclients/?format=json')
+                .get('http://127.0.0.1:8000/listclients/?format=json', this.headerSimple)
                 .then(response => {
                     this.items = response.data;
                 })
