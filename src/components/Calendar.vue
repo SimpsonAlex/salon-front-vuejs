@@ -50,7 +50,7 @@
 
 <script>
 import axios from 'axios'
-import BACKEND_PATH from './const'
+import url from "@/components/const";
 
 export default {
     data() {
@@ -95,7 +95,6 @@ export default {
             ],
             headerSimple: this.$store.state.headerSimple,
             headerFile: this.$store.state.headerFile,
-            urlCalendar: BACKEND_PATH + 'calendar/',
         };
     },
     methods: {
@@ -121,7 +120,7 @@ export default {
         createEvent(){
             this.formEvent.start = this.startDay + 'T' + this.startTime + ':00'
             axios
-                .post(this.urlCalendar, this.formEvent, this.headerSimple)
+                .post(url.calendar, this.formEvent, this.headerSimple)
         },
         bindGoogleCalendar(value){
             let time_event = ""
@@ -177,7 +176,7 @@ export default {
 
     },
     mounted() {
-    axios.get(this.urlCalendar, this.headerSimple)
+    axios.get(url.calendar, this.headerSimple)
       .then(response => (this.items = response.data))
       .then(() => this.getItemsCalendar());
   }

@@ -3,13 +3,13 @@
         <h1>Login</h1>
         <input type="text" name="username" v-model="input.username" placeholder="Username">
         <input type="password" name="password" v-model="input.password" placeholder="Password">
-        <button type="button" v-on:click="login()">Login</button>
+        <button type="button" @click="login">Login</button>
     </div>
 </template>
 
 <script>
     import axios from 'axios'
-    import BACKEND_PATH from './const'
+    import url from "@/components/const";
 
 export default {
     name: 'auth',
@@ -19,9 +19,6 @@ export default {
                     username: "",
                     password: ""
                 },
-                response: '',
-                error_login: '',
-                urlLogin: BACKEND_PATH + 'auth/login/'
             }
         },
         methods: {
@@ -31,24 +28,37 @@ export default {
                     return false
                 }
                 axios
-                    .post(this.urlLogin,
+                    .post(url.login,
                         this.input,
                         {
                             headers:
                                 {"Content-Type": 'application/json', 'Accept': 'application/json', }
                         })
-                    .then(response => this.$store.state.token = response.data)
+                    .then(response => localStorage.setItem('token', response.data.key))
                     .then(() => this.getHeaders())
                     .then(() => this.$emit("authenticated", true) | this.$router.replace({name: "home"}))
-                    .catch(error => alert(this.error_login = error.response.data.non_field_errors[0]))
+                    .catch(error => alert(error.response.data.non_field_errors[0]))
                     .catch(() => alert('connection refused'))
             },
             getHeaders(){
-                this.$store.state.headerSimple = {headers:{"Authorization": 'Token ' + this.$store.state.token.key,
+                this.$store.state.headerSimple = {headers:{"Authorization": `Token ${localStorage.getItem('token')}`,
                         "Content-Type": 'application/json', 'Accept': 'application/json'}}
-                this.$store.state.headerFile = {headers:{"Authorization": 'Token ' + this.$store.state.token.key,
+                this.$store.state.headerFile = {headers:{"Authorization": `Token ${localStorage.getItem('token')}`,
                         "Content-Type": 'multipart/form-data', 'Accept': 'application/json'}}
             }
+        },
+        mounted(){
+    //     const BACKEND_PATH = 'http://127.0.0.1:8000/';
+    //             this.$store.state.url = {
+    //   imageCreateBase: (BACKEND_PATH + 'images/'),
+    //   imagePut: BACKEND_PATH + 'image_create/',
+    //   visits: BACKEND_PATH + 'visit_detail/',
+    //   clients: BACKEND_PATH + 'list_clients/',
+    //   client_photo: BACKEND_PATH + 'photo/',
+    //   calendar: BACKEND_PATH + 'calendar/',
+    //   registration: BACKEND_PATH + 'registration/',
+    //   login: (BACKEND_PATH + 'auth/login/')
+    // }
         }
     }
 </script>

@@ -2,9 +2,15 @@
     <div>
 
             <div>
-                <b-table stacked :items="items"  :fields="fields" ref="table" dark>
+                <b-table stacked :items="items" :busy="isBusy" :fields="fields" ref="table" dark>
+                  <template v-slot:table-busy>
+                    <div class="text-center text-danger my-2">
+                      <b-spinner variant="primary" label="Spinning"></b-spinner>
+                      <strong>Loading...</strong>
+                    </div>
+                  </template>
                    <template v-slot:cell(foto)="row">
-                        <img :src=row.item.foto height="400px" width="200px">
+                       <b-img :src=transformGDUrl(row.item.foto) height="400px" width="200px"></b-img>
                    </template>
                 </b-table>
                 <b-button variant="outline-primary" @click="showChangerOptions">Show changer options</b-button>
@@ -12,7 +18,7 @@
 
             </div>
             <div>
-                <b-form @submit="onSubmit" @reset="onReset" v-if="show">
+                <b-form @reset="onReset" v-if="show">
                   <b-form-group id="input-1" label="FIRST NAME:" label-for="input-2">
                     <b-form-input
                     id="input 1"
@@ -46,7 +52,7 @@
                       <b-form-radio name="active" v-model="form.active" value="false">NO ACTIVE</b-form-radio>
                     </b-form-group>
                    </b-form-group>
-                  <b-button type="submit" variant="primary">Submit</b-button>
+                  <b-button @click="onSubmit" variant="primary">Submit</b-button>
                   <b-button type="reset" variant="danger">Reset</b-button>
                 </b-form>
              </div>
@@ -55,18 +61,18 @@
 
 <script>
 import axios from 'axios'
-import BACKEND_PATH from './const'
+import url from "@/components/const";
 
 export default {
   data() {
     return {
-
+        isBusy: true,
         items: [],
         it: {},
         headerSimple: this.$store.state.headerSimple,
         headerFile: this.$store.state.headerFile,
-        url: (BACKEND_PATH + 'listclients/'+ this.$route.params.id + '/?format=json'),
-        urlPhotoPut: (BACKEND_PATH + 'photo/' + this.$route.params.id + '/'),
+        url: `${url.clients}${this.$route.params.id}/?format=json`,
+        urlPhotoPut: `${url.client_photo}${this.$route.params.id}/`,
         fields:[
             {key: 'first_name', label:"FIRST NAME"},
             {key: 'last_name', label: "LAST NAME"},
@@ -87,6 +93,15 @@ export default {
       }
     },
     methods: {
+      transformGDUrl(url){
+            if (!url){
+                return url
+            }
+            let base = 'https://drive.google.com/uc?export=view&id='
+            url = url.split('/')
+            url = base + url[url.length -2]
+            return url
+      },
       onSubmit(){
         let formData = new FormData();
         formData.append('foto', this.form.foto)
@@ -100,10 +115,10 @@ export default {
                     axios
                         .put(this.urlPhotoPut, formData,this.headerFile)
                         .then(response => {this.items[0].foto = response.data.foto})
+                        .then(() => alert('your changes are accepted!'))
+                        .then(() => this.hideChangerOptions())
+                        .then(() => this.onUpdate())
             }})
-            .then(() => alert('your changes are accepted!'))
-            .then(() => this.hideChangerOptions())
-            .then(() => this.onUpdate())
             .catch(function(error) {alert('FAILURE!!')})
       },
       onReset(evt) {
@@ -124,6 +139,7 @@ export default {
           this.form.last_name = items.last_name
           this.form.telepfon = items.telepfon
           this.form.active = items.active
+          this.isBusy = false
 
       },
       showChangerOptions(){

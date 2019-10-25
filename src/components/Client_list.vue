@@ -74,17 +74,24 @@
       stacked="md"
       :items="items"
       :fields="fields"
+      :busy="isBusy"
       :total-rows="totalRows"
       :current-page="currentPage"
       :per-page="perPage"
       :filter="filter"
       @filtered="onFiltered"
     >
+      <template v-slot:table-busy>
+        <div class="text-center text-danger my-2">
+          <b-spinner variant="primary" label="Spinning"></b-spinner>
+          <strong>Loading...</strong>
+        </div>
+      </template>
       <template v-slot:cell(index)="data">
         {{ data.index + 1 }}
       </template>
       <template v-slot:cell(foto)="row">
-        <img :src=row.item.foto width="100px" height="150px">
+          <b-img :src=transformGDUrl(row.item.foto) width="100px" height="150px"></b-img>
       </template>
       <template v-slot:cell(url)="row">
         <b-button pill variant="outline-primary" :to="'/client/' + row.item.id">Detail</b-button>
@@ -109,7 +116,7 @@
        </b-pagination>
     </div>
     <div>
-          <b-modal id='client' size="xl" ref="modal" centered >
+          <b-modal ok-only id='client' size="xl" ref="modal" centered >
                       <b-form-group id="input-1" label="FIRST NAME:" label-for="input-1">
                         <b-form-input
                         id="input 1"
@@ -145,7 +152,7 @@
                       <b-button type="submit" @click="onSubmit" variant="primary">Submit</b-button>
                       <b-button type="reset" @click="onReset" variant="danger">Reset</b-button>
           </b-modal>
-          <b-modal id='visit' size="xl" ref="modal_visit"  centered>
+          <b-modal ok-only id='visit' size="xl" ref="modal_visit"  centered>
                 <b-form>
                   <b-form-group id="input-group-3" label="Client" label-for="input-3">
                     <b-form-select
@@ -199,12 +206,12 @@
 
 <script>
 import axios from 'axios'
-import BACKEND_PATH from './const'
+import url from "@/components/const";
 
 export default {
   data() {
     return {
-
+      isBusy: true,
       items: null,
       newClient: null,
       client: {
@@ -256,19 +263,12 @@ export default {
         cor_no_manic: false,
         pay: "",
       },
-      headers: {headers:{"Authorization": 'Token ' + this.$store.state.token.key, "Content-Type": 'application/json', 'Accept': 'application/json'}},
-      headersFile: {headers:{"Authorization": 'Token ' + this.$store.state.token.key, "Content-Type": 'application/json', 'Accept': 'application/json'}},
-      urlCreateClient: BACKEND_PATH + 'create-client/',
-      urlDeleteClient: BACKEND_PATH + 'clients/',
-      urlPhotoPut: BACKEND_PATH + 'photo/',
-      urlCreateVisit: BACKEND_PATH + 'visit_detail/',
-      urlImagePost: BACKEND_PATH + "images/",
-      urlImagePut: BACKEND_PATH + 'image_create/',
+      headers: this.$store.state.headerSimple,
+      headersFile: this.$store.state.headerFile,
     }
   },
   computed: {
-    sortOptions() {
-      // Create an options list from our fields
+  sortOptions() {
       return this.fields
         .filter(f => f.sortable)
         .map(f => {
@@ -277,51 +277,62 @@ export default {
     }
   },
   mounted() {
-  axios
-    .get(BACKEND_PATH + 'listclients/?format=json', this.headers)
-    .then(response => {this.items = response.data;
-    })
-    .then(() => this.totalRows = this.items.length)
-    .then(() => this.getClient())
-    .catch(error => {
-      console.log(error);
-      this.errored = true;
-    })
-    .finally(() => (this.loading = false));
-},
+      axios
+        .get(url.clients + '?format=json', this.headers)
+        .then(response => {this.items = response.data;
+        })
+        .then(() => this.totalRows = this.items.length)
+        .then(() => this.getClient())
+        .then(() => this.isBusy = false)
+        .catch(error => {
+          console.log(error);
+          this.errored = true;
+        })
+        .finally(() => (this.loading = false));
+  },
   methods: {
-  addImageVisit(){
+      transformGDUrl(url){
+            if (!url){
+                return url
+            }
+            let base = 'https://drive.google.com/uc?export=view&id='
+            url = url.split('/')
+            url = base + url[url.length -2]
+            return url
+      },
+      addImageVisit(){
         if (this.formImageList){
             for (let image of this.formImageList){
                 let imagePutId = null
                 let formData = new FormData();
                 formData.append('main_image', image);
-                axios.post(this.urlImagePost, this.formImage, this.headers)
+                axios.post(url.imageCreateBase, this.formImage, this.headers)
                     .then(response => {
                             imagePutId = [response.data.id]
                         })
                     .then(() => {
-                        axios.put((this.urlImagePut + imagePutId + '/'), formData, this.headersFile)
+                        axios.put((url.imagePut + imagePutId + '/'), formData, this.headersFile)
                         })
                     .catch(function (error) {
                             alert('FAILURE!!')
                         })
             }
         }
-    },
-  saveVisit(){
+      },
+      saveVisit(){
         axios
-            .post(this.urlCreateVisit, this.formVisit, this.headers)
+            .post(url.visits, this.formVisit, this.headers)
             .then(response => {this.formImage.visit = response.data.id; this.formImage.item = response.data.client})
             .then(() => this.addImageVisit())
             .then(() => this.$refs.modal_visit.hide())
             .then(() => this.onReset())
+            .then(() => alert('okey-dokey'))
             .catch(function(error) {alert('FAILURE!!')})
-    },
-  onUpdate() {
+        },
+      onUpdate() {
         this.$refs.table.refresh();
-    },
-  onReset(){
+      },
+      onReset(){
         this.formVisit = {
             client: '',
             date_visit: "",
@@ -330,68 +341,74 @@ export default {
             cor_manic: false,
             cor_no_manic: false,
             pay: "",
-      };
-      this.formImage = {
-        "visit": null,
-        "item": null,
-      };
-      this.formImageList = [];
-      this.form = {
-          first_name: '',
-          last_name: '',
-          telepfon: '',
-          active: '',
-          foto: null,
-        };
+          };
+          this.formImage = {
+            "visit": null,
+            "item": null,
+          };
+          this.formImageList = [];
+          this.form = {
+              first_name: '',
+              last_name: '',
+              telepfon: '',
+              active: '',
+              foto: null,
+            };
 
-    },
-  getClient(){
-      this.optionsClientName = [];
-      for (let item of this.items){
-          this.client = {}
-          this.client.text = item.first_name + ' ' + item.last_name;
-          this.client.value = item.id;
-          this.optionsClientName.push(this.client)
-
-      }
-    },
-  deleteClient(row){
-        axios
-            .delete(
-                this.urlDeleteClient + row.item.id + '/', this.headers)
-            .then(() => this.items.splice(row.index, 1))
-            .then(() => this.onUpdate())
-
-    },
-  onSubmit(){
-        let formData = new FormData();
-        formData.append('foto', this.form.foto);
-        axios.post(
-            this.urlCreateClient,
-            this.form,
-            this.headers)
-            .then(response => {this.newClient = response.data})
-            .then(() => {
-            if (formData.get('foto')){
-                axios.put(
-                    (this.urlPhotoPut + this.newClient.id + '/'),
-                    formData,
-                    this.headersFile
-                    ).then(response => {this.newClient.foto = response.data.foto})
-            }})
-            .then(() => this.items.push(this.newClient))
-            .then(() => this.getClient())
-            .catch(function(error) {alert('FAILURE!!')})
-            .then(() => alert('your changes are accepted!'))
-            .then(() => this.$refs.modal.hide())
-            .then(() => this.onReset())
-            .then(() => this.onUpdate())
       },
-  onFiltered(filteredItems) {
-      // Trigger pagination to update the number of buttons/pages due to filtering
-      this.totalRows = filteredItems.length
-      this.currentPage = 1
-    },
-  }
+      getClient(){
+          this.optionsClientName = [];
+          for (let item of this.items){
+              this.client = {}
+              this.client.text = item.first_name + ' ' + item.last_name;
+              this.client.value = item.id;
+              this.optionsClientName.push(this.client)
+
+          }
+        },
+      deleteClient(row){
+            if(!confirm('Are You sure?')){
+                return
+            }
+            if(!confirm('you thought well?')){
+                return;
+            }
+            axios
+                .delete(
+                    url.clients + row.item.id + '/', this.headers)
+                .then(() => this.items.splice(row.index, 1))
+                .then(() => this.onUpdate())
+                .then(() => alert('client permanently deleted'))
+
+        },
+      onSubmit(){
+            let formData = new FormData();
+            formData.append('foto', this.form.foto);
+            axios.post(
+                url.clients,
+                this.form,
+                this.headers)
+                .then(response => {this.newClient = response.data})
+                .then(() => {
+                    if (formData.get('foto')){
+                        axios.put(
+                            (url.client_photo + this.newClient.id + '/'),
+                            formData,
+                            this.headersFile
+                            ).then(response => {this.newClient.foto = response.data.foto})
+                    }})
+                .then(() => this.items.push(this.newClient))
+                .then(() => this.getClient())
+                .catch(function(error) {alert('FAILURE!!')})
+                .then(() => alert('your changes are accepted!'))
+                .then(() => this.$refs.modal.hide())
+                .then(() => this.onReset())
+                .then(() => this.onUpdate())
+          },
+      onFiltered(filteredItems) {
+          this.totalRows = filteredItems.length
+          this.currentPage = 1
+        },
+      }
 }
 </script>

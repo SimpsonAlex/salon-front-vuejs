@@ -1,6 +1,29 @@
 <template>
   <div>
-    <b-table :items="items" :fields="fields" striped responsive="sm" ref="table">
+    <b-form inline>
+      <b-form-group id="input-1" label="Date:" label-for="input-1">
+
+          <b-form-input type="date"
+          id="input-1"
+          v-model="startDate"
+          class="mb-2 mr-lg-2-2 mb-lg-0"
+          ></b-form-input>
+      </b-form-group>
+      <b-form-group id="input-2" label="Date:" label-for="input-2">
+          <b-form-input type="date"
+          id="input-2"
+          v-model="finishDate"
+          ></b-form-input>
+      </b-form-group>
+      <b-button pill @click="select()" variant="success">Submit</b-button>
+    </b-form>
+    <b-table :items="items" :fields="fields" :busy="isBusyTable" striped responsive="sm" ref="table">
+      <template v-slot:table-busy>
+        <div class="text-center text-danger my-2">
+          <b-spinner variant="primary" label="Spinning"></b-spinner>
+          <strong>Loading...</strong>
+        </div>
+      </template>
       <template v-slot:cell(index)="data">
           {{ data.index + 1 }}
       </template>
@@ -9,21 +32,23 @@
       </template>
 
       <template v-slot:cell(image)="row">
-          <b-button size="sm" @click="showImage(row.toggleDetails, row.item.date_visit)" class="mr-2">
+          <b-button size="sm" @click="showImage(row.toggleDetails, row.item.id, row.detailsShowing)" class="mr-2">
+              <b-spinner v-if="isBusyImage[row.item.id]" variant="primary" label="Spinning"></b-spinner>
               Image
           </b-button>
       </template>
       <template v-slot:cell(details)="row">
-          <b-button v-if="!row.detailsShowing" size="sm" @click="changeVisit(row.toggleDetails, row.item.id)" class="mr-1">
+          <b-button v-if="!row.detailsShowing" size="sm" @click="showDetails(row.toggleDetails, row.item)" class="mr-1">
               Change Visit
           </b-button>
       </template>
       <template v-slot:row-details="row">
           <div v-if="showImages" class="p-4 bg-dark">
+              <b-spinner v-if="isBusyImage[row.item.id]" variant="primary" label="Spinning"></b-spinner>
                   <b-row>
-                    <b-col v-for="photo in row.item.image" :key="photo.id">
-                           <b-img-lazy v-if="photo.main_image" v-b-modal.mod :src='photo.main_image' @click.native='modalParrametres(photo.main_image, row.item.image, photo, photo.id)' height="200px" width="300px"></b-img-lazy>
-                           <b-img v-else :src="photo.main_image" v-b-modal.mod @click='modalParrametres(photo, row.item.image, photo, photo.id)'  height="200px" width="300px"></b-img>
+                    <b-col v-for="photo in imageVisitDetail[row.item.id].image" :key="photo.id">
+                           <b-img-lazy v-if="photo.main_image" v-b-modal.mod :src='transformGDUrl(photo.main_image)' @click.native='modalParrametres(photo.main_image, row.item.image, photo, photo.id)' height="200px" width="300px"></b-img-lazy>
+                           <b-img v-else :src="transformGDUrl(photo.main_image)" v-b-modal.mod @click='modalParrametres(photo, row.item.image, photo, photo.id)'  height="200px" width="300px"></b-img>
                     </b-col>
                   </b-row>
                   <b-button @click="row.toggleDetails" variant="primary">HIDE</b-button>
@@ -34,48 +59,47 @@
                 </b-form>
           </div>
           </div>
-          <div v-else-if="showChangeVisit && row.item.id === itemsVisitDetail.id">
+          <div v-else-if="showChangeVisit && row.item.id === form[row.item.id].id">
+
               <b-card>
+                <b-spinner v-if="isBusyDetail[row.item.id]" variant="primary" label="Spinning"></b-spinner>
                 <b-form inline>
                   <b-form-group id="input-1" label="Date:" label-for="input-1">
                       <b-form-input type="date"
                       id="input-1"
-                      v-model="form.date_visit"
+                      v-model="form[row.item.id].date_visit"
                       ></b-form-input>
                   </b-form-group>
                   <b-form-group id="input-group-2" >
-                      <b-form-checkbox name="active" v-model="form.manic" value="true">MANICURE</b-form-checkbox>
+                      <b-form-checkbox name="active" v-model="form[row.item.id].manic" value="true">MANICURE</b-form-checkbox>
                   </b-form-group>
                   <b-form-group id="input-group-3" l>
-                      <b-form-checkbox name="active" v-model="form.nomanic" value="true">PEDICURE</b-form-checkbox>
+                      <b-form-checkbox name="active" v-model="form[row.item.id].nomanic" value="true">PEDICURE</b-form-checkbox>
                   </b-form-group>
                   <b-form-group id="input-group-4" >
-                      <b-form-checkbox name="active" v-model="form.cor_manic" value="true">MANICURE CORRECTION</b-form-checkbox>
+                      <b-form-checkbox name="active" v-model="form[row.item.id].cor_manic" value="true">MANICURE CORRECTION</b-form-checkbox>
                   </b-form-group>
                   <b-form-group id="input-group-5">
-                      <b-form-checkbox name="active" v-model="form.cor_no_manic" value="true">PEDICURE CORRECTION</b-form-checkbox>
+                      <b-form-checkbox name="active" v-model="form[row.item.id].cor_no_manic" value="true">PEDICURE CORRECTION</b-form-checkbox>
                   </b-form-group>
                   <b-form-group id="input-6" label="PAY:" label-for="input-2">
                       <b-form-input type="number"
                       id="input-6"
-                      v-model="form.pay"
+                      v-model="form[row.item.id].pay"
                       ></b-form-input>
                   </b-form-group>
-                  <b-button pill @click="onSubmit(form.id, row)" variant="success">Submit</b-button>
+                  <b-button pill @click="onSubmit(form[row.item.id].id, row)" variant="success">Submit</b-button>
                   <b-button pill @click="onReset" variant="warning">Reset</b-button>
-                  <b-button @click="onDelete(form.id, row)" variant="danger">DELETE</b-button>
+                  <b-button @click="onDelete(form[row.item.id].id, row)" variant="danger">DELETE</b-button>
                   <b-button @click="row.toggleDetails" variant="primary">HIDE</b-button>
                 </b-form>
               </b-card>
           </div>
-          <div v-else-if="row.detailsShowing && !showImages || row.toggleDetails()">
-          </div>
-
       </template>
     </b-table>
-       <div>
+    <div>
           <b-modal id='mod' size="xl" ref="modal" centered >
-            <b-img :src='imageDeleteForm.src' width="1000px" height="1000px"></b-img>
+            <b-img :src='transformGDUrl(imageDeleteForm.src)' width="1000px" height="1000px"></b-img>
             <b-button @click="imageDelete(imageDeleteForm)" variant="danger">DELETE</b-button>
           </b-modal>
        </div>
@@ -84,24 +108,25 @@
 
 <script>
 import axios from 'axios'
-import BACKEND_PATH from './const'
+import url from "@/components/const";
 
 export default {
   data() {
     return {
+        isBusyTable: false,
+        isBusyDetail: {},
+        isBusyImage: {},
         items: null,
         itemsVisitDetail: {},
+        imageVisitDetail: {},
         imagePutId: null,
+        startDate: '',
+        finishDate: '',
         headerSimple: this.$store.state.headerSimple,
         headerFile: this.$store.state.headerFile,
-        url: (`${BACKEND_PATH}clients/${this.$route.params.id}/?format=json`),
-        urlDetailVisit: BACKEND_PATH +'visit_detail/',
-        urlImagePost: BACKEND_PATH + "images/",
-        urlImagePut: BACKEND_PATH + 'image_create/',
-        urlImageDelete: BACKEND_PATH + 'image_create/',
         fields:[
             'index',
-            {key:'client', label:'CLIENT'},
+            // {key:'client', label:'CLIENT'},
             {key: 'date_visit', label:"DATE"},
             {key: 'manic', label: "MANICURE", formatter: (value) => {
             return value ? 'Yes' : 'No'} },
@@ -142,31 +167,71 @@ export default {
       }
     },
     methods: {
-       showDetails(id){
+       transformGDUrl(url){
+            if (!url){
+                return url
+            }
+            let base = 'https://drive.google.com/uc?export=view&id='
+            url = url.split('/')
+            url = base + url[url.length -2]
+            return url
+      },
+
+       select(){
+         this.isBusyTable = true
+         axios
+             .get(`${url.visits_only}?visit_after=${this.startDate}&visit_before=${this.finishDate}&client=${this.$route.params.id}`,
+                 this.headerSimple)
+             .then(response => {this.items = response.data; this.isBusyTable = false;})
+             .then(() => this.onUpdate())
+             .catch(error => {
+                console.log(error);
+                this.errored = true;
+              })
+              .finally(() => (this.loading = false));
+       },
+       // showDetails(id){
+       //     return axios
+       //      .get(`${url.visits_only}${id}/`, this.headerSimple)
+       //      .then(response => {this.itemsVisitDetail = response.data; this.isBusyDetail = false})
+       //      .catch(error => {
+       //        console.log(error);
+       //        this.errored = true;
+       //      })
+       //      .finally(() => (this.loading = false));
+       //
+       // },
+       getImage(id){
            return axios
-            .get(this.urlDetailVisit + id + '/', this.headerSimple)
-            .then(response => {this.itemsVisitDetail = response.data;
-            }).catch(error => {
+            .get(`${url.visits}${id}/`, this.headerSimple)
+            .then(response => {this.imageVisitDetail[id] = response.data; this.isBusyImage[id] = false})
+            .catch(error => {
               console.log(error);
               this.errored = true;
             })
             .finally(() => (this.loading = false));
-
        },
-       showImage(func){
+       showImage(func, id, show){
+           this.isBusyImage[id] = true
+           this.onUpdate()
            this.showImages= true
-           func()
            this.showChangeVisit = false
+           if(show){
+               func()
+               this.isBusyImage[id] = false
+               return
+           }
+           this.getImage(id).then(() =>  func())
        },
        modalParrametres(src, row, photo, id){
-
            this.imageDeleteForm.src = src;
            this.imageDeleteForm.row = row;
            this.imageDeleteForm.id_refresh = photo;
            this.imageDeleteForm.id_delete = id;
        },
-       changeVisit(func, id){
-            this.showDetails(id).then(() => {this.form = this.itemsVisitDetail}).then(() =>  func())
+       showDetails(func, item){
+            this.form[item.id] = item
+            func()
             this.showImages = false
             this.showChangeVisit = true
         },
@@ -177,7 +242,7 @@ export default {
            let itSure = confirm('Are you sure want to delete this Visit Detail Instance?');
            if (itSure) {
                axios
-                   .delete((this.urlDetailVisit + id + '/', this.headerSimple))
+                   .delete(`${url.visits}${id}/`, this.headerSimple)
                    .then(() => row.toggleDetails())
                    .then(() => this.items.splice(row.index, 1))
                    .then(() => this.onUpdate())
@@ -186,15 +251,20 @@ export default {
               }
        },
        onSubmit(id, row) {
+            this.isBusyDetail[id] = true
+            this.onUpdate()
             axios
-            .put((this.urlDetailVisit + id + '/'), this.form, this.headerSimple)
+            .put(`${url.visits}${id}/`, this.form[id], this.headerSimple)
             .then(response => this.applyChange(response.data, row))
             .catch(function(error) {alert('FAILURE!!')})
             .then(() => this.onUpdate())
-            .then(() => row.toggleDetails())
+            .then(() => {row.toggleDetails() ; this.isBusyDetail[id] = false})
         },
        onUpdate() {
-            this.$refs.table.refresh();
+          if (this.items.length === 0){
+              alert('in this criteria visits not found')
+          }
+          this.$refs.table.refresh();
         },
        applyChange(responseData, row){
             row.item.date_visit = responseData.date_visit
@@ -213,7 +283,7 @@ export default {
                 let formData = new FormData();
                 formData.append('main_image', this.addImageForm.main_image)
                 axios.post(
-                    this.urlImagePost,
+                    url.imageCreateBase,
                     this.addImageForm,
                     this.headerSimple
                     )
@@ -221,20 +291,17 @@ export default {
                         this.imagePutId = [response.data.id]
                     })
                     .then(() => {
-                        if (formData.get('main_image')) {
                             axios.put(
-                                (this.urlImagePut + this.imagePutId + '/'),
+                                `${url.imagePut}${this.imagePutId}/`,
                                 formData,
                                 this.headerFile
                                 )
                                 .then(response => {row_item_image.push(response.data)})
                                 .then(() => this.onUpdate())
                                 .catch(function (error) {alert('FAILURE!!')})
-                        }
-                    })
+                        })
                     .then(() => alert('your changes are accepted!'))
                     .catch(function (error) {alert('FAILURE!!')})
-                    .then(() => this.$refs.dropdown.hide(true))
             }
 
         },
@@ -242,7 +309,7 @@ export default {
            let itSure = confirm('delete this photo?');
            if (itSure) {
             axios
-            .delete((this.urlImageDelete + imageDeleteForm.id_delete + '/'),
+            .delete(`${url.imagePut}${imageDeleteForm.id_delete}/`,
                 this.headerSimple)
             .then(() => imageDeleteForm.row.splice(imageDeleteForm.row.indexOf(imageDeleteForm.id_refresh),1))
             .then(() => this.onUpdate()).then(() => this.$refs.modal.hide())
@@ -252,17 +319,6 @@ export default {
               }
             }
         },
-       mounted() {
-         axios
-         .get(this.url, this.headerSimple)
-         .then(response => {this.items = response.data.visit;})
-         .catch(error => {
-            console.log(error);
-            this.errored = true;
-          })
-          .finally(() => (this.loading = false));
-    },
-
 }
 </script>
 
