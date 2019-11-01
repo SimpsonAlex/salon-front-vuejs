@@ -23,12 +23,13 @@ export default new Router({
             name: "login",
             component: Auth,
         },
-        {path: "/home", name: 'home', component: Header,
-            children:[
+        {
+            path: "/home", name: 'home', component: Header,
+            children: [
                 {path: '/image', component: Image},
                 {path: '/calendar', component: Calendar},
-                {path: '/clients_list', component: Client_list },
-                {path: '/client/:id', component:ClientDetail},
+                {path: '/clients_list', component: Client_list},
+                {path: '/client/:id', component: ClientDetail},
                 {path: '*', redirect: {name: 'home'}}
             ],
             mode: 'history'

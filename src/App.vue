@@ -1,7 +1,7 @@
 <template>
     <div id="app">
-        <router-link v-if="authenticated" :to="login" @click.native="logout()" >Logout</router-link>
-        <router-view @authenticated="setAuthenticated" />
+        <router-link v-if="authenticated" :to="login" @click.native="logout()">Logout</router-link>
+        <router-view @authenticated="setAuthenticated"/>
     </div>
 </template>
 
@@ -14,7 +14,7 @@
                 login: '/login',
             }
         },
-        created(){
+        created() {
             if (localStorage.getItem('token')) {
                 this.$store.state.headerSimple = {
                     headers: {
@@ -31,7 +31,7 @@
             }
         },
         mounted() {
-            if(!localStorage.getItem('token') && this.$router.currentRoute.path !== this.login) {
+            if (!localStorage.getItem('token') && this.$router.currentRoute.path !== this.login) {
                 this.$router.push(this.login);
             }
         },
@@ -50,12 +50,12 @@
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+    #app {
+        font-family: 'Avenir', Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-align: center;
+        color: #2c3e50;
+        margin-top: 60px;
+    }
 </style>

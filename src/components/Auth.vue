@@ -11,8 +11,8 @@
     import axios from 'axios'
     import url from "@/components/const";
 
-export default {
-    name: 'auth',
+    export default {
+        name: 'auth',
         data() {
             return {
                 input: {
@@ -32,7 +32,7 @@ export default {
                         this.input,
                         {
                             headers:
-                                {"Content-Type": 'application/json', 'Accept': 'application/json', }
+                                {"Content-Type": 'application/json', 'Accept': 'application/json',}
                         })
                     .then(response => localStorage.setItem('token', response.data.key))
                     .then(() => this.getHeaders())
@@ -40,36 +40,32 @@ export default {
                     .catch(error => alert(error.response.data.non_field_errors[0]))
                     .catch(() => alert('connection refused'))
             },
-            getHeaders(){
-                this.$store.state.headerSimple = {headers:{"Authorization": `Token ${localStorage.getItem('token')}`,
-                        "Content-Type": 'application/json', 'Accept': 'application/json'}}
-                this.$store.state.headerFile = {headers:{"Authorization": `Token ${localStorage.getItem('token')}`,
-                        "Content-Type": 'multipart/form-data', 'Accept': 'application/json'}}
+            getHeaders() {
+                this.$store.state.headerSimple = {
+                    headers: {
+                        "Authorization": `Token ${localStorage.getItem('token')}`,
+                        "Content-Type": 'application/json', 'Accept': 'application/json'
+                    }
+                }
+                this.$store.state.headerFile = {
+                    headers: {
+                        "Authorization": `Token ${localStorage.getItem('token')}`,
+                        "Content-Type": 'multipart/form-data', 'Accept': 'application/json'
+                    }
+                }
             }
         },
-        mounted(){
-    //     const BACKEND_PATH = 'http://127.0.0.1:8000/';
-    //             this.$store.state.url = {
-    //   imageCreateBase: (BACKEND_PATH + 'images/'),
-    //   imagePut: BACKEND_PATH + 'image_create/',
-    //   visits: BACKEND_PATH + 'visit_detail/',
-    //   clients: BACKEND_PATH + 'list_clients/',
-    //   client_photo: BACKEND_PATH + 'photo/',
-    //   calendar: BACKEND_PATH + 'calendar/',
-    //   registration: BACKEND_PATH + 'registration/',
-    //   login: (BACKEND_PATH + 'auth/login/')
-    // }
-        }
+
     }
 </script>
 
 <style scoped>
-#login {
-    width: 500px;
-    border: 1px solid #CCCCCC;
-    background-color: #FFFFFF;
-    margin: auto;
-    margin-top: 200px;
-    padding: 20px;
-}
+    #login {
+        width: 500px;
+        border: 1px solid #CCCCCC;
+        background-color: #FFFFFF;
+        margin: auto;
+        margin-top: 200px;
+        padding: 20px;
+    }
 </style>

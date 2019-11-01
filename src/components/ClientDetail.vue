@@ -1,17 +1,17 @@
 <template>
     <div>
         <b-tabs content-class="mt-3">
-           <b-tab title="Data Detail">
-                 <ClientDataDetail/>
-           </b-tab>
+            <b-tab title="Data Detail">
+                <ClientDataDetail/>
+            </b-tab>
 
-           <b-tab title="Visits Detail">
+            <b-tab title="Visits Detail">
                 <ClientVisitDetail/>
-           </b-tab>
+            </b-tab>
 
-           <b-tab title="Client Image">
+            <b-tab title="Client Image">
                 <ClientImage/>
-           </b-tab>
+            </b-tab>
         </b-tabs>
     </div>
 
@@ -19,13 +19,13 @@
 </template>
 
 <script>
-  import ClientDataDetail from "@/components/ClientDataDetail";
-  import ClientVisitDetail from "@/components/ClientVisitDetail";
-  import ClientImage from "@/components/ClientImage";
+    import ClientDataDetail from "@/components/ClientDataDetail";
+    import ClientVisitDetail from "@/components/ClientVisitDetail";
+    import ClientImage from "@/components/ClientImage";
 
     export default {
         name: "ClientDetail",
-        components:{
+        components: {
             ClientVisitDetail,
             ClientDataDetail,
             ClientImage
