@@ -6,6 +6,7 @@
                     <b-nav-item to="/calendar" exact exact-active-class="active">Calendar</b-nav-item>
                     <b-nav-item to="/clients_list" exact exact-active-class="active">Clients list</b-nav-item>
                     <b-nav-item to="/image" exact exact-active-class="active">Image</b-nav-item>
+                    <b-nav-item to="/calculations" exact exact-active-class="active">Calculations</b-nav-item>
                 </b-nav>
             </b-card-header>
             <b-card-body>

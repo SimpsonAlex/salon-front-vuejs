@@ -217,7 +217,6 @@
                     clientData.text = item.first_name + ' ' + item.last_name;
                     clientData.value = item.id;
                     this.optionsClientName.push(clientData)
-
                 }
             }
         },

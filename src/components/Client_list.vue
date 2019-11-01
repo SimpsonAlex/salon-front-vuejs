@@ -1,8 +1,6 @@
 <template>
     <b-container fluid>
-        <!-- User Interface controls -->
         <b-row>
-
             <b-col lg="6" class="my-1">
                 <b-form-group
                         label="Filter"
@@ -25,11 +23,6 @@
                     </b-input-group>
                 </b-form-group>
             </b-col>
-
-            <b-col sm="5" md="6" class="my-1">
-                <b-button v-b-modal.visit pill variant="success">Add new visit</b-button>
-                <b-button v-b-modal.client pill variant="outline-warning">Add new client</b-button>
-            </b-col>
             <b-col sm="7" md="6" class="my-1">
                 <b-form-group
                         label="Per page"
@@ -48,6 +41,16 @@
                             :options="pageOptions"
                     ></b-form-select>
                 </b-form-group>
+            </b-col>
+
+        </b-row>
+        <b-row>
+            <b-col sm="5" md="6" class="my-1">
+
+            </b-col>
+            <b-col>
+                <b-button v-b-modal.visit pill variant="success">Add new visit</b-button>
+                <b-button v-b-modal.client pill variant="outline-warning">Add new client</b-button>
             </b-col>
         </b-row>
         <div class="mt-3">
@@ -90,8 +93,12 @@
             <template v-slot:cell(index)="data">
                 {{ data.index + 1 }}
             </template>
+            <template v-slot:head(photo)="data">
+                <b-spinner v-if="isBusyShowPhoto"></b-spinner>
+                <b-button variant="info" pill v-if="!isBusyShowPhoto" @click="getPhoto" v-model="showPhoto">{{showPhoto? 'Hide photo':'Show photo?'}}</b-button>
+            </template>
             <template v-slot:cell(photo)="row">
-                <b-img :src=transformGDUrl(row.item.photo) width="100px" height="150px"></b-img>
+                <b-img v-if="showPhoto" :src=transformGDUrl(row.item.photo) width="100px" height="150px"></b-img>
             </template>
             <template v-slot:cell(url)="row">
                 <b-button pill variant="outline-primary" :to="'/client/' + row.item.id">Detail</b-button>
@@ -221,8 +228,10 @@
         data() {
             return {
                 isBusy: true,
+                isBusyShowPhoto: false,
                 items: null,
                 newClient: null,
+                showPhoto: false,
                 client: {
                     text: '',
                     value: '',
@@ -250,7 +259,7 @@
                 totalRows: 1,
                 currentPage: 1,
                 perPage: 5,
-                pageOptions: [5, 10, 20, 30],
+                pageOptions: [1, 5, 10, 20, 30],
                 filter: null,
                 form: {
                     first_name: '',
@@ -279,7 +288,7 @@
         },
         mounted() {
             axios
-                .get(url.clients + '?format=json', this.headers)
+                .get(url.client_without_photo + '?format=json', this.headers)
                 .then(response => {
                     this.items = response.data;
                 })
@@ -293,6 +302,27 @@
                 .finally(() => (this.loading = false));
         },
         methods: {
+            getPhoto() {
+                if (this.showPhoto){
+                    this.showPhoto = false
+                }else {
+                    this.isBusyShowPhoto = true
+                    this.showPhoto = true
+                    axios
+                        .get(url.clients + '?format=json', this.headers)
+                        .then(response => {
+                            this.items = response.data;
+                        })
+                        .then(() => this.totalRows = this.items.length)
+                        .then(() => this.getClient())
+                        .then(() => this.isBusy = false)
+                        .catch(error => {
+                            console.log(error);
+                            this.errored = true;
+                        })
+                        .finally(() => (this.loading = false) | (this.isBusyShowPhoto = false));
+                }
+            },
             transformGDUrl(url) {
                 if (!url) {
                     return url
