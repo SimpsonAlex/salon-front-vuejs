@@ -228,6 +228,7 @@
         data() {
             return {
                 isBusy: true,
+
                 isBusyShowPhoto: false,
                 items: null,
                 newClient: null,
@@ -275,7 +276,7 @@
                 formImageList: [],
                 formVisit: {
                     client: '',
-                    date_visit: "",
+                    date_visit: (new Date()).toISOString().slice(0, 10),
                     manicure: false,
                     pedicure: false,
                     manicure_correction: false,
