@@ -1,29 +1,10 @@
-# front
+Manicure salon admin user interface.
 
-## Project setup
-```
-npm install
-```
+Written on vue js for interacting with a backend server python using django rest framework (https://github.com/SimpsonAlex/sakon-backend-django)
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+Axios is used for requests
+main job html on bootstrap-vue.
 
-### Compiles and minifies for production
-```
-npm run build
-```
+Project prepared for uploading to heroku
 
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+All is you need  select "BACKEND_PATH"(path to backend server) in file 'src/components/const.js' and upload this repository to heroku
